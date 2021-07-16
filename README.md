@@ -62,6 +62,7 @@ type Logger interface {
 
 ```go
 New(name string, w io.Writer, l Level) (Logger, error)
+NewWithOptions(w io.Writer, level Level, op Options) (Logger, error)
 ```
 
 in which
@@ -69,6 +70,17 @@ in which
 - `name` specify logger name. Currently available values `discard`, `stdlog` and `logrus`
 - `w` logger output
 - `l` logger level
+- `op` loger options
+
+## Options
+
+1. `discard` and `stdlog`, no options is supported.
+2. `logrus`, support the following options:
+
+    - `formatter`: logrus formatter, either `text` or `json`. Default format is `logrus.TextFormatter`
+    - `timestampFormat`: timestamp layout format, see [`time.Time` format](https://pkg.go.dev/time#pkg-constants)
+    - `reportCaller`: if set to `true`, the calling method will be added as a field
+    - `fullTimestamp`: logging the full timestamp instead of elapsed time since application started, default to `true`
 
 ## Credits
 
