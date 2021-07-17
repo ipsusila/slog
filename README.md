@@ -1,4 +1,5 @@
-# slog
+# slog [![Go Reference](https://pkg.go.dev/badge/github.com/ipsusila/slog)](https://pkg.go.dev/github.com/ipsusila/slog)
+
 Golang **s**imple **log**ger wrapper. It supports leveled logger with the following levels:
 
 1. **PANIC**, log message and call `panic`
