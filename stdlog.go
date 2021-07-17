@@ -14,6 +14,12 @@ import (
 // Name of the standard logger
 const StdLoggerName = "stdlog"
 
+const (
+	defaultTimestampFormat = "2006/01/02 15:04:05 MST"
+	fieldTimestampFormat   = "timestampFormat"
+	fieldDisableColor      = "disableColor"
+)
+
 type stdLoggerConstructor struct{}
 
 // color mapper
@@ -30,11 +36,12 @@ var colorMapper = map[Level]func(string, ...interface{}) string{
 // logger without output, except for panic
 type stdLogger struct {
 	LevelLoggerBase
-	mu       sync.Mutex
-	out      io.Writer
-	buf      bytes.Buffer
-	prefixes map[Level]string
-	tsFormat string
+	mu           sync.Mutex
+	out          io.Writer
+	buf          bytes.Buffer
+	prefixes     map[Level]string
+	tsFormat     string
+	disableColor bool
 }
 
 func init() {
@@ -42,22 +49,29 @@ func init() {
 }
 
 func (c *stdLoggerConstructor) New(w io.Writer, l Level) (Logger, error) {
-	return NewStdLogger(w, l)
+	return NewStdLogger(w, l, nil)
 }
 
+// create logger with options
 func (c *stdLoggerConstructor) NewWithOptions(w io.Writer, l Level, op Options) (Logger, error) {
-	// TODO: support various options
-	return NewStdLogger(w, l)
+	return NewStdLogger(w, l, op)
 }
 
 // NewStdLogger creates new logger with given parameters
-func NewStdLogger(w io.Writer, l Level) (Logger, error) {
+func NewStdLogger(w io.Writer, l Level, op Options) (Logger, error) {
 	bl := NewLevelLoggerBase(l)
 	sl := stdLogger{
 		LevelLoggerBase: *bl,
 		out:             w,
 		prefixes:        make(map[Level]string),
-		tsFormat:        "2006/01/02 15:04:05 MST",
+		tsFormat:        defaultTimestampFormat,
+		disableColor:    false,
+	}
+
+	// customized options
+	if len(op) != 0 {
+		sl.tsFormat = op.GetString(fieldTimestampFormat, defaultTimestampFormat)
+		sl.disableColor = op.GetBool(fieldDisableColor, false)
 	}
 
 	// create logger for each level
@@ -67,8 +81,11 @@ func NewStdLogger(w io.Writer, l Level) (Logger, error) {
 		if prefix != "" {
 			prefix += " "
 		}
-		if fn, ok := colorMapper[lv]; ok {
-			prefix = fn(prefix)
+
+		if sl.disableColor {
+			if fn, ok := colorMapper[lv]; ok {
+				prefix = fn(prefix)
+			}
 		}
 		sl.prefixes[lv] = prefix
 	}
@@ -115,8 +132,10 @@ func (sl *stdLogger) outputFields(lv Level, msg string, keyVals []interface{}, s
 		j := 0
 		for i := 0; i < n; i += 2 {
 			field, _ := AsString(keyVals[i])
-			if fn, ok := colorMapper[lv]; ok {
-				field = fn(field)
+			if !sl.disableColor {
+				if fn, ok := colorMapper[lv]; ok {
+					field = fn(field)
+				}
 			}
 			sl.buf.WriteString(field)
 			sl.buf.WriteRune(sep)
@@ -128,8 +147,10 @@ func (sl *stdLogger) outputFields(lv Level, msg string, keyVals []interface{}, s
 		// number of args is odd
 		if n != len(keyVals) {
 			field := fmt.Sprintf("%s-%02d", UnknownFieldName, nkv)
-			if fn, ok := colorMapper[lv]; ok {
-				field = fn(field)
+			if !sl.disableColor {
+				if fn, ok := colorMapper[lv]; ok {
+					field = fn(field)
+				}
 			}
 			sl.buf.WriteString(field)
 			sl.buf.WriteRune(sep)

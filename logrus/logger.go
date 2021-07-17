@@ -15,10 +15,25 @@ const Name = "logrus"
 type logrusConstructor struct{}
 
 const (
-	fieldFormatter       = "formatter"
-	fieldTimestampFormat = "timestampFormat"
-	fieldReportCaller    = "reportCaller"
-	fieldFulltimeStamp   = "fullTimestamp"
+	defaultTimestampFormat         = "2006/01/02 15:04:05 MST"
+	fieldFormatter                 = "formatter"
+	fieldTimestampFormat           = "timestampFormat"
+	fieldDisableTimestamp          = "disbleTimestamp"
+	fieldReportCaller              = "reportCaller"
+	fieldFulltimeStamp             = "fullTimestamp"
+	fieldMapper                    = "fieldMap"
+	fieldDataKey                   = "dataKey"
+	fieldPrettyPrint               = "prettyPrint"
+	fieldDisableHTMLEscape         = "disableHTMLEscape"
+	fieldForceColors               = "forceColors"
+	fieldDisableColors             = "disableColors"
+	fieldForceQuote                = "forceQuote"
+	fieldDisableQuote              = "disableQuote"
+	fieldEnvironmentOverrideColors = "environmentOverrideColors"
+	fieldDisableSorting            = "disableSorting"
+	fieldDisableLevelTruncation    = "disableLevelTruncation"
+	fieldPadLevelText              = "padLevelText"
+	fieldQuoteEmptyFields          = "quoteEmptyFields"
 )
 
 // logger without output, except for panic
@@ -47,32 +62,68 @@ func toLogrusLevel(l slog.Level) (log.Level, bool) {
 }
 
 // New creates discard logger
-func New(w io.Writer, l slog.Level, op *slog.Options) (slog.Logger, error) {
+func New(w io.Writer, l slog.Level, op slog.Options) (slog.Logger, error) {
 	ll, ok := toLogrusLevel(l)
 	if !ok {
 		return nil, fmt.Errorf("unknown logger level: %v", l)
 	}
 
+	// customize standard fields
+	var fieldMap = log.FieldMap{
+		log.FieldKeyMsg:         "@msg",
+		log.FieldKeyLevel:       "@level",
+		log.FieldKeyTime:        "@time",
+		log.FieldKeyLogrusError: "@logrus_error",
+		log.FieldKeyFunc:        "@func",
+		log.FieldKeyFile:        "@file",
+	}
+
 	// get various options
 	reportCaller := false
-	fullTimestamp := true
 	var formatter log.Formatter = &log.TextFormatter{
-		TimestampFormat: "2006/01/02 15:04:05 MST",
-		FullTimestamp:   fullTimestamp,
+		TimestampFormat: defaultTimestampFormat,
+		FullTimestamp:   true,
+		FieldMap:        fieldMap,
 	}
-	if op != nil {
-		// report caller here?
+	if len(op) != 0 {
+		// override report caller options
 		reportCaller = op.GetBool(fieldReportCaller, false)
+
+		// customized field mapper
+		fm := op.GetOptions(fieldMapper)
+		for key, val := range fieldMap {
+			fieldMap[key] = fm.GetString(string(key), val)
+		}
+
+		disableTimestamp := op.GetBool(fieldDisableTimestamp, false)
+
+		// formatter options
 		txtF := op.GetString(fieldFormatter, "text")
 		switch txtF {
 		case "json":
 			formatter = &log.JSONFormatter{
-				TimestampFormat: op.GetString(fieldTimestampFormat, time.RFC3339),
+				TimestampFormat:   op.GetString(fieldTimestampFormat, time.RFC3339),
+				DataKey:           op.GetString(fieldDataKey, ""),
+				PrettyPrint:       op.GetBool(fieldPrettyPrint, false),
+				DisableHTMLEscape: op.GetBool(fieldDisableHTMLEscape, false),
+				DisableTimestamp:  disableTimestamp,
+				FieldMap:          fieldMap,
 			}
 		default:
 			formatter = &log.TextFormatter{
-				TimestampFormat: op.GetString(fieldTimestampFormat, "2006/01/02 15:04:05 MST"),
-				FullTimestamp:   op.GetBool(fieldTimestampFormat, true),
+				ForceColors:               op.GetBool(fieldForceColors, false),
+				DisableColors:             op.GetBool(fieldDisableColors, false),
+				ForceQuote:                op.GetBool(fieldForceQuote, false),
+				DisableQuote:              op.GetBool(fieldDisableQuote, false),
+				EnvironmentOverrideColors: op.GetBool(fieldEnvironmentOverrideColors, false),
+				DisableSorting:            op.GetBool(fieldDisableSorting, false),
+				DisableLevelTruncation:    op.GetBool(fieldDisableLevelTruncation, false),
+				PadLevelText:              op.GetBool(fieldPadLevelText, false),
+				QuoteEmptyFields:          op.GetBool(fieldQuoteEmptyFields, false),
+				TimestampFormat:           op.GetString(fieldTimestampFormat, defaultTimestampFormat),
+				FullTimestamp:             op.GetBool(fieldFulltimeStamp, true),
+				DisableTimestamp:          disableTimestamp,
+				FieldMap:                  fieldMap,
 			}
 		}
 	}
@@ -95,7 +146,7 @@ func (c *logrusConstructor) New(w io.Writer, l slog.Level) (slog.Logger, error) 
 	return New(w, l, nil)
 }
 func (c *logrusConstructor) NewWithOptions(w io.Writer, l slog.Level, op slog.Options) (slog.Logger, error) {
-	return New(w, l, &op)
+	return New(w, l, op)
 }
 
 func (l *logrusLogger) HasLevel(lv slog.Level) bool {

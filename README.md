@@ -74,13 +74,32 @@ in which
 
 ## Options
 
-1. `discard` and `stdlog`, no options is supported.
-2. `logrus`, support the following options:
+1. `discard`, discard log ouput except `panic`. Options not supported.
+2. `stdlog`, standar logger options:
+
+    - `timestampFormat`: timestamp layout format, see [`time.Time` format](https://pkg.go.dev/time#pkg-constants)
+    - `disableColor`: to disable color in log
+
+3. `logrus`, support options for [`logrus.TextFormatter` formatter](https://pkg.go.dev/github.com/sirupsen/logrus#TextFormatter) and [`logrus.JSONFormatter` formatter](https://pkg.go.dev/github.com/sirupsen/logrus#JSONFormatter).
 
     - `formatter`: logrus formatter, either `text` or `json`. Default format is `logrus.TextFormatter`
     - `timestampFormat`: timestamp layout format, see [`time.Time` format](https://pkg.go.dev/time#pkg-constants)
     - `reportCaller`: if set to `true`, the calling method will be added as a field
     - `fullTimestamp`: logging the full timestamp instead of elapsed time since application started, default to `true`
+    - `disableTimestamp`: disable timestamp in log
+    - `fieldMap`: customize default key names
+	- `dataKey`: data key for `json` formatter
+	- `prettyPrint`: pretty print `json` output
+	- `disableHTMLEscape`: disable HTML escape in `json` formatter
+	- `forceColors`: for color in `text` formatter
+	- `disableColors`: disable colors in `text` formatter
+	- `forceQuote`: force quote in `text` formatter
+	- `disableQuote`: disable quote in `text` formatter
+	- `environmentOverrideColors`: override color based on environment config in `text` formatter
+	- `disableSorting`: disable key sorting in `text` formatter
+	- `disableLevelTruncation`: disable log level string truncation in `text` formatter
+	- `padLevelText`: add padding in level string in `text` formatter
+	- `quoteEmptyFields`: add quote for empty log entry in `text` formatter
 
 ## Credits
 

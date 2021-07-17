@@ -6,16 +6,50 @@ import "strings"
 type Options map[string]interface{}
 
 // Get configuration value or default if doesn't exist
-func (c Options) Get(key string, def interface{}) interface{} {
-	if val, ok := c[key]; ok {
+func (op Options) Get(key string, def interface{}) interface{} {
+	if val, ok := op[key]; ok {
 		return val
 	}
 	return key
 }
 
+// GetOptions get value as map[string]interface{}
+func (op Options) GetOptions(key string) Options {
+	m, ok := op[key]
+	if !ok {
+		return nil
+	}
+
+	switch v := m.(type) {
+	case Options:
+		return v
+	case map[string]interface{}:
+		return Options(v)
+	default:
+		return nil
+	}
+}
+
+// GetMap return string mapper
+func (op Options) GetMap(key string) map[string]interface{} {
+	m, ok := op[key]
+	if !ok {
+		return nil
+	}
+
+	switch v := m.(type) {
+	case Options:
+		return v
+	case map[string]interface{}:
+		return v
+	default:
+		return nil
+	}
+}
+
 // GetString get string from options with given key
-func (c Options) GetString(key string, def string) string {
-	val, ok := c[key]
+func (op Options) GetString(key string, def string) string {
+	val, ok := op[key]
 	if !ok {
 		return def
 	}
@@ -32,8 +66,8 @@ func (c Options) GetString(key string, def string) string {
 }
 
 // GetInt get integer value from options with given key
-func (c Options) GetInt(key string, def int) int {
-	val, ok := c[key]
+func (op Options) GetInt(key string, def int) int {
+	val, ok := op[key]
 	if !ok {
 		return def
 	}
@@ -69,8 +103,8 @@ func (c Options) GetInt(key string, def int) int {
 }
 
 // GetBool get boolean value from options with given key
-func (c Options) GetBool(key string, def bool) bool {
-	val, ok := c[key]
+func (op Options) GetBool(key string, def bool) bool {
+	val, ok := op[key]
 	if !ok {
 		return def
 	}
