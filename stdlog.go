@@ -82,7 +82,7 @@ func NewStdLogger(w io.Writer, l Level, op Options) (Logger, error) {
 			prefix += " "
 		}
 
-		if sl.disableColor {
+		if !sl.disableColor {
 			if fn, ok := colorMapper[lv]; ok {
 				prefix = fn(prefix)
 			}
