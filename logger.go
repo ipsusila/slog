@@ -3,6 +3,7 @@ package slog
 import (
 	"errors"
 	"io"
+	"os"
 	"sync"
 )
 
@@ -16,11 +17,20 @@ var (
 var (
 	pkgLoggerMu sync.Mutex
 	discardL    *discardLogger = &discardLogger{LevelLoggerBase: LevelLoggerBase{level: AllLevel}}
-	pkgLogger   Logger         = discardL
 )
 
-// Unknown field name
-var UnknownFieldName = "@logfield"
+// Unknown field name and default logger
+var (
+	UnknownFieldName        = "@logfield"
+	DefaultLogger    Logger = discardL
+)
+
+func init() {
+	// Switch to STD Logger
+	if lgr, err := NewStdLogger(os.Stdout, TraceLevel, nil); err != nil {
+		DefaultLogger = lgr
+	}
+}
 
 // Register logger constructor
 func Register(name string, constructor Constructor) {
@@ -144,115 +154,115 @@ func Use(name string, w io.Writer, l Level) error {
 	if err != nil {
 		return err
 	}
-	pkgLogger = lgr
+	DefaultLogger = lgr
 
 	return nil
 }
 
 // may be unsafe?
 func HasLevel(lv Level) bool {
-	return pkgLogger.HasLevel(lv)
+	return DefaultLogger.HasLevel(lv)
 }
 func SetLevel(lv Level) {
-	pkgLogger.SetLevel(lv)
+	DefaultLogger.SetLevel(lv)
 }
 
 func Trace(args ...interface{}) {
-	pkgLogger.Trace(args...)
+	DefaultLogger.Trace(args...)
 }
 func Debug(args ...interface{}) {
-	pkgLogger.Debug(args...)
+	DefaultLogger.Debug(args...)
 }
 func Print(args ...interface{}) {
-	pkgLogger.Print(args...)
+	DefaultLogger.Print(args...)
 }
 func Info(args ...interface{}) {
-	pkgLogger.Info(args...)
+	DefaultLogger.Info(args...)
 }
 func Warn(args ...interface{}) {
-	pkgLogger.Warn(args...)
+	DefaultLogger.Warn(args...)
 }
 func Error(args ...interface{}) {
-	pkgLogger.Error(args...)
+	DefaultLogger.Error(args...)
 }
 func Fatal(args ...interface{}) {
-	pkgLogger.Fatal(args...)
+	DefaultLogger.Fatal(args...)
 }
 func Panic(args ...interface{}) {
-	pkgLogger.Panic(args...)
+	DefaultLogger.Panic(args...)
 }
 
 func Traceln(args ...interface{}) {
-	pkgLogger.Traceln(args...)
+	DefaultLogger.Traceln(args...)
 }
 func Debugln(args ...interface{}) {
-	pkgLogger.Debugln(args...)
+	DefaultLogger.Debugln(args...)
 }
 func Println(args ...interface{}) {
-	pkgLogger.Println(args...)
+	DefaultLogger.Println(args...)
 }
 func Infoln(args ...interface{}) {
-	pkgLogger.Infoln(args...)
+	DefaultLogger.Infoln(args...)
 }
 func Warnln(args ...interface{}) {
-	pkgLogger.Warnln(args...)
+	DefaultLogger.Warnln(args...)
 }
 func Errorln(args ...interface{}) {
-	pkgLogger.Errorln(args...)
+	DefaultLogger.Errorln(args...)
 }
 func Fatalln(args ...interface{}) {
-	pkgLogger.Fatalln(args...)
+	DefaultLogger.Fatalln(args...)
 }
 func Panicln(args ...interface{}) {
-	pkgLogger.Panicln(args...)
+	DefaultLogger.Panicln(args...)
 }
 
 func Tracef(format string, args ...interface{}) {
-	pkgLogger.Tracef(format, args...)
+	DefaultLogger.Tracef(format, args...)
 }
 func Debugf(format string, args ...interface{}) {
-	pkgLogger.Debugf(format, args...)
+	DefaultLogger.Debugf(format, args...)
 }
 func Printf(format string, args ...interface{}) {
-	pkgLogger.Printf(format, args...)
+	DefaultLogger.Printf(format, args...)
 }
 func Infof(format string, args ...interface{}) {
-	pkgLogger.Infof(format, args...)
+	DefaultLogger.Infof(format, args...)
 }
 func Warnf(format string, args ...interface{}) {
-	pkgLogger.Warnf(format, args...)
+	DefaultLogger.Warnf(format, args...)
 }
 func Errorf(format string, args ...interface{}) {
-	pkgLogger.Errorf(format, args...)
+	DefaultLogger.Errorf(format, args...)
 }
 func Fatalf(format string, args ...interface{}) {
-	pkgLogger.Fatalf(format, args...)
+	DefaultLogger.Fatalf(format, args...)
 }
 func Panicf(format string, args ...interface{}) {
-	pkgLogger.Panicf(format, args...)
+	DefaultLogger.Panicf(format, args...)
 }
 
 func Tracew(msg string, keyVals ...interface{}) {
-	pkgLogger.Tracew(msg, keyVals...)
+	DefaultLogger.Tracew(msg, keyVals...)
 }
 func Debugw(msg string, keyVals ...interface{}) {
-	pkgLogger.Debugw(msg, keyVals...)
+	DefaultLogger.Debugw(msg, keyVals...)
 }
 func Printw(msg string, keyVals ...interface{}) {
-	pkgLogger.Printw(msg, keyVals...)
+	DefaultLogger.Printw(msg, keyVals...)
 }
 func Infow(msg string, keyVals ...interface{}) {
-	pkgLogger.Infow(msg, keyVals...)
+	DefaultLogger.Infow(msg, keyVals...)
 }
 func Warnw(msg string, keyVals ...interface{}) {
-	pkgLogger.Warnw(msg, keyVals...)
+	DefaultLogger.Warnw(msg, keyVals...)
 }
 func Errorw(msg string, keyVals ...interface{}) {
-	pkgLogger.Errorw(msg, keyVals...)
+	DefaultLogger.Errorw(msg, keyVals...)
 }
 func Fatalw(msg string, keyVals ...interface{}) {
-	pkgLogger.Fatalw(msg, keyVals...)
+	DefaultLogger.Fatalw(msg, keyVals...)
 }
 func Panicw(msg string, keyVals ...interface{}) {
-	pkgLogger.Panicw(msg, keyVals...)
+	DefaultLogger.Panicw(msg, keyVals...)
 }
