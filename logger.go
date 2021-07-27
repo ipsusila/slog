@@ -27,7 +27,7 @@ var (
 
 func init() {
 	// Switch to STD Logger
-	if lgr, err := NewStdLogger(os.Stdout, TraceLevel, nil); err != nil {
+	if lgr, err := NewStdLogger(os.Stdout, TraceLevel, nil); err == nil {
 		DefaultLogger = lgr
 	}
 }
