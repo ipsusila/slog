@@ -7,7 +7,9 @@ type LevelLoggerBase struct {
 
 // NewLevelLoggerBase return new instance of level logger base
 func NewLevelLoggerBase(lv Level) *LevelLoggerBase {
-	return &LevelLoggerBase{level: lv}
+	bl := &LevelLoggerBase{}
+	bl.SetLevel(lv)
+	return bl
 }
 
 // HasLevel return current logger level
